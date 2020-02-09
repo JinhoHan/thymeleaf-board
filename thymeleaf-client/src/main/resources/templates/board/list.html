@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" 
+		xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+		layout:decorator="layout/default">
+
+
+<head>
+	<title>Board List</title>
+	
+	<!-- Page level plugin CSS-->
+	<th:block layout:fragment="contentsCss">
+	</th:block>
+</head>
+
+<body>
+
+	<div class="container" layout:fragment="content">
+	
+		<div class="page-header">
+			<h1>게시글 목록</h1>
+		</div>
+		<div class="pull-right" style="width:100px;margin:10px 0;">
+			<button type="button" class="btn btn-primary" id="create">등록</button>
+		</div>
+		<br/>
+		<br/>
+		<br/>
+		
+		<!-- <div id="mainHide"> -->
+		<div class="container-fluid">
+			<div class="row">
+				<table class="table table-hover table-striped">
+					<thead>
+						<tr>
+							<th>No</th>
+							<th>Title</th>
+							<th>CreatedDate</th>
+							<th>UpdatedDate</th>
+						</tr>
+					</thead>
+					<tbody id="boardList">
+						<!-- Rest Api 서버를 사용함으로써 thymeleaf 바인딩을 사용할 수 없음.. -->
+						<!-- 
+						<tr th:each="board : ${boardList}">
+							<td th:text="${board.idx}"></td>
+							<td ><a th:href="'/board?idx='+${board.idx}" th:text="${board.title}"></a></td>
+							<td ><a th:href="'/boards?idx='+${board.idx}" th:text="${board.title}"></a></td>
+							<td th:text="${#temporals.format(board.createdDate, 'yyyy-MM-dd HH:mm')}"></td>
+							<td th:text="${#temporals.format(board.updatedDate, 'yyyy-MM-dd HH:mm')}"></td>
+						</tr>
+						-->
+					</tbody>
+				</table>
+			</div>
+			
+			<!-- pagination -->
+			<nav class="navbar navbar-default" aria-label="Page navigation" style="text-align: center;">
+				<!-- Rest Api 서버를 사용함으로써 thymeleaf 바인딩을 사용할 수 없음.. -->
+				<!-- 
+				<ul class="pagination" 
+					th:with="startNumber=${T(Math).floor(boardList.number/10)} * 10 + 1,
+							endNumber=(${boardList.totalPages} > ${startNumber} + 9) ? ${startNumber} + 9 : ${boardList.totalPages}">
+					
+					<li th:style="${boardList.first} ? 'display:none'"><a href="/board/list?page=1">&laquo;</a></li>
+					<li th:style="${boardList.first} ? 'display:none'">
+						<a th:href="@{/board/list(page=${boardList.number})}">&lsaquo;</a>
+					</li>
+					<li th:each="page : ${#numbers.sequence(startNumber, endNumber)}"
+						th:class="(${page} == ${boardList.number} + 1) ? 'active'">
+						<a th:href="@{/board/list(page=${page})}" th:text="${page}">
+							<span class="sr-only"></span>
+						</a>
+					</li>
+					<li th:style="${boardList.last} ? 'display:none'">
+						<a th:href="@{/board/list(page=${boardList.number} + 2)}">&rsaquo;</a>
+						<a th:href="@{/boards(page=${boardList.number} + 2)}">&rsaquo;</a>
+					</li>
+					<li th:style="${boardList.last} ? 'display:none'">
+						<a th:href="@{/board/list(page=${boardList.totalPages})}">&raquo;</a>
+						<a th:href="@{/boards(page=${boardList.totalPages})}">&raquo;</a>
+					</li>
+				</ul>
+				 -->
+				 <ul class="pagination" id="pagination">
+				 </ul>
+			</nav>
+			
+		</div>
+	
+	</div>
+	
+	
+	
+	
+	<!-- Page level plugin JavaScript-->
+	<th:block layout:fragment="contentsScript">
+	</th:block>
+	
+	<!-- Custom scripts for this pages-->
+	<th:block layout:fragment="customScript">
+		<script th:inline="javascript">
+		
+			$(document).ready(function() {
+				getBoards(0);
+			});
+			
+			// 목록데이터 가져오기.
+			function getBoards(pages) {
+				$("#boardList").empty();
+				$(".pagination").empty();
+				$.ajax({
+					url : "http://localhost:8081/api/boards?page=" + pages,
+					type : "GET",
+					contentType : "application/json",
+					dataType : "json",
+					success : function(data) {
+						console.log(data);
+						//console.log(data._embedded.boardList);
+						//console.log(data.page.totalElements);
+						//console.log(data.page.number);
+						
+						// createTableView 함수로 처리.
+						/* 
+						var boardList = data._embedded.boardList;
+						var boardListCnt = data.page.totalElements;
+						var currentPage = data.page.number;
+						var totalPages = data.page.totalPages;
+						
+						var tableHtml = "";
+						$.each(boardList, function(index, board) {
+							tableHtml += "<tr>";
+							tableHtml += "<td>" + (boardListCnt*1 - index*1 - currentPage*1*10) + "</td>";
+							tableHtml += "<td><a href='/board?idx=" + board.idx + "'>" + board.title + "</a></td>";
+							tableHtml += "<td>" + board.createdDate + "</td>";
+							tableHtml += "<td>" + board.updatedDate + "</td>";
+							tableHtml += "</tr>";
+						});
+						$("#boardList").html(tableHtml);
+						//$("#boardList").append(tableHtml);
+						*/
+						var resultData = data;
+						createTableView(resultData);
+						createPaginationView(resultData);
+						
+						// 함수로 처리
+						/* 
+						var paginationHtml = "";
+						paginationHtml += '<ul class="pagination">';
+						
+						// [ << < 버튼 ]
+						if(currentPage*1 != 0) {
+							paginationHtml += "<li style=''><a href=\"javascript:void(0);\" onclick=\"getBoards(0);\" attr-a=\"onclick : attr-a\">" + "\&laquo;" + "</a></li>";
+							paginationHtml += "<li style=''><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (currentPage*1 - 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&lsaquo;" + "</a></li>";
+						} else {
+							paginationHtml += "<li style='display:none'><a href=\"javascript:void(0);\" onclick=\"getBoards(0);\" attr-a=\"onclick : attr-a\">" + "\&laquo;" + "</a></li>";
+							paginationHtml += "<li style='display:none'><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (currentPage*1 - 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&laquo;" + "</a></li>";	
+						}
+						
+						// [ 페이지 버튼 ]
+						for(var nIdx = 0; nIdx < totalPages; nIdx++) {
+							//paginationHtml += "<li><a href=\"javascript:void(0);\" onclick=\"getBoards(" + nIdx + ");\" attr-a=\"onclick : attr-a\">" + (nIdx + 1) + "</a></li>";
+							paginationHtml += "<li class=\"" + (page == nIdx ? 'active' : '') + "\"><a href=\"javascript:void(0);\" onclick=\"getBoards(" + nIdx + ");\" attr-a=\"onclick : attr-a\">" + (nIdx + 1) + "</a></li>";
+						}
+						
+						// [ > >> 버튼 ]
+						if(currentPage*1 != (totalPages*1 - 1)) {
+							paginationHtml += "<li style=''><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (currentPage*1 + 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&rsaquo;" + "</a></li>";
+							paginationHtml += "<li style=''><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (totalPages*1 - 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&raquo;" + "</a></li>";
+						} else {
+							paginationHtml += "<li style='display:none'><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (currentPage*1 + 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&rsaquo;" + "</a></li>";
+							paginationHtml += "<li style='display:none'><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (totalPages*1 - 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&raquo;" + "</a></li>";
+						}
+						paginationHtml += '</ul>';
+						$("#pagination").html(paginationHtml);
+						//$("#pagination").append(paginationHtml);
+						*/
+						
+						
+						
+					},
+					error : function() {
+						alert("목록 출력 실패!");
+					}
+				});
+			}
+			
+			// 테이블 그리기
+			function createTableView(resultData) {
+				var boardList = resultData._embedded.boardList;
+				var boardListCnt = resultData.page.totalElements;
+				var currentPage = resultData.page.number;
+				
+				var tableHtml = "";
+				$.each(boardList, function(index, board) {
+					tableHtml += "<tr>";
+					tableHtml += "<td>" + (boardListCnt*1 - index*1 - currentPage*1*10) + "</td>";
+					tableHtml += "<td><a href='/board?idx=" + board.idx + "'>" + board.title + "</a></td>";
+					tableHtml += "<td>" + board.createdDate + "</td>";
+					tableHtml += "<td>" + board.updatedDate + "</td>";
+					tableHtml += "</tr>";
+				});
+				$("#boardList").html(tableHtml);
+			}
+			
+			// 페이징 처리
+			function createPaginationView(resultData) {
+				var totalPages = resultData.page.totalPages;
+				var currentPage = resultData.page.number;
+				
+				var paginationHtml = "";
+				paginationHtml += '<ul class="pagination">';
+				
+				// [ << < 버튼 ]
+				if(currentPage*1 != 0) {
+					paginationHtml += "<li style=''><a href=\"javascript:void(0);\" onclick=\"getBoards(0);\" attr-a=\"onclick : attr-a\">" + "\&laquo;" + "</a></li>";
+					paginationHtml += "<li style=''><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (currentPage*1 - 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&lsaquo;" + "</a></li>";
+				} else {
+					paginationHtml += "<li style='display:none'><a href=\"javascript:void(0);\" onclick=\"getBoards(0);\" attr-a=\"onclick : attr-a\">" + "\&laquo;" + "</a></li>";
+					paginationHtml += "<li style='display:none'><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (currentPage*1 - 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&laquo;" + "</a></li>";	
+				}
+				
+				// [ 페이지 버튼 ]
+				for(var nIdx = 0; nIdx < totalPages; nIdx++) {
+					paginationHtml += "<li class=\"" + (currentPage == nIdx ? 'active' : '') + "\"><a href=\"javascript:void(0);\" onclick=\"getBoards(" + nIdx + ");\" attr-a=\"onclick : attr-a\">" + (nIdx + 1) + "</a></li>";
+				}
+				
+				// [ > >> 버튼 ]
+				if(currentPage*1 != (totalPages*1 - 1)) {
+					paginationHtml += "<li style=''><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (currentPage*1 + 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&rsaquo;" + "</a></li>";
+					paginationHtml += "<li style=''><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (totalPages*1 - 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&raquo;" + "</a></li>";
+				} else {
+					paginationHtml += "<li style='display:none'><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (currentPage*1 + 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&rsaquo;" + "</a></li>";
+					paginationHtml += "<li style='display:none'><a href=\"javascript:void(0);\" onclick=\"getBoards(" + (totalPages*1 - 1) + ");\" attr-a=\"onclick : attr-a\">" + "\&raquo;" + "</a></li>";
+				}
+				paginationHtml += '</ul>';
+				$("#pagination").html(paginationHtml);
+				//$("#pagination").append(paginationHtml);
+			}
+				
+			// 등록 버튼
+			$("#create").click(function() {
+				location.href = "/board";
+			});
+			
+		</script>
+	</th:block>
+	
+</body>
+
+</html>

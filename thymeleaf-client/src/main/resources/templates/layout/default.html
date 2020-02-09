@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+	<head>
+		<title layout:title-pattern="$LAYOUT_TITLE : $CONTENT_TITLE">디폴트</title>
+		<!-- 공통 css, js, meta tag -->
+		<th:block th:replace="fragments/config :: config"></th:block>
+	</head>
+	
+	<body>
+		
+		<!-- 공통 header -->
+		<header th:replace="fragments/header :: header"></header>
+		
+		<div id="wrapper" class="wrapper">
+			<!-- page content body 구성 -->
+			<div layout:fragment="content"></div>
+		</div>
+		
+		<!-- page content javascript -->
+		<th:block th:replace="fragments/script :: script"></th:block>
+		
+	</body>
+
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" 
+		xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+		layout:decorator="layout/default">
+
+
+<head>
+	<title>Board Form</title>
+	
+	<!-- Page level plugin CSS-->
+	<th:block layout:fragment="contentsCss">
+	</th:block>
+</head>
+
+<body>
+
+	<div class="container" layout:fragment="content">
+	
+		<div class="page-header">
+			<h1>게시글 등록</h1>
+		</div>
+		<br/>
+		
+		<input id="board_idx" type="hidden" th:value="${board?.idx}" />
+		<!-- <input id="board_create_date" type="hidden" th:value="${board?.createdDate}" /> -->
+		
+		<table class="table">
+			<tr>
+				<th style="padding:13px 0 0 15px;">생성 날짜</th>
+				<td>
+					<!-- 
+					<input type="text" class="form-control input-sm" id="board_createdDate"
+							readonly th:value="${board?.createdDate} ? ${#temporals.format(board.createdDate, 'yyyy-MM-dd HH:mm')} : ${board?.createdDate}" />
+					-->
+					<input type="text" class="form-control input-sm" id="board_createdDate" readonly/>
+				</td>
+			</tr>
+			<tr>
+				<th style="padding:13px 0 0 15px;">제목</th>
+				<td>
+					<!-- <input id="board_title" type="text" class="form-control input-sm" th:value="${board?.title}" /> -->
+					<input id="board_title" type="text" class="form-control input-sm" />
+				</td>
+			</tr>
+			<tr>
+				<th style="padding:13px 0 0 15px;">내용</th>
+				<td>
+					<!-- 
+					<textarea id="board_content" class="form-control input-sm" 
+								maxlength="140" rows="7" style="height: 200px;" th:text="${board?.title}" ></textarea>
+					-->
+					<textarea id="board_content" class="form-control input-sm" maxlength="140" rows="7" style="height: 200px;" ></textarea>
+					<span class="help-block"></span>
+				</td>
+			</tr>
+		</table>
+		
+		<!-- 목록으로 -->
+		<div class="pull-left">
+			<a href="/board/list" class="btn btn-success">목록으로</a>
+		</div>
+		
+		<!-- 수정/삭제 버튼 -->
+		<div class="pull-right">
+			<button th:if="!${board?.idx}" type="button" class="btn btn-primary" id="insert">저장</button>
+			<button th:if="${board?.idx}" type="button" class="btn btn-info" id="update">수정</button>
+			<button th:if="${board?.idx}" type="button" class="btn btn-danger" id="delete">삭제</button>
+		</div>
+		
+	</div>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- Page level plugin JavaScript-->
+	<th:block layout:fragment="contentsScript">
+	</th:block>
+	
+	<!-- Custom scripts for this pages-->
+	<th:block layout:fragment="customScript">
+		<script>
+		$(document).ready(function() {
+			if($("#board_idx").val() != "") {
+				$.ajax({
+					url : "http://localhost:8081/api/boards/" + $("#board_idx").val(),
+					type : "GET",
+					contentType : "application/json",
+					dataType : "json",
+					success : function(data) {
+						var board = data.board;
+						console.log(board);
+						$("#board_createdDate").val(board.createdDate);
+						$("#board_title").val(board.title);
+						$("#board_content").val(board.content);
+					},
+					error : function() {
+						alert("상세Form 실패!");
+					}
+				});
+			}
+		});
+		</script>
+		<script th:if="!${board?.idx}">
+			// 저장 버튼
+			$("#insert").click(function() {
+				var jsonData = JSON.stringify({
+					title : $("#board_title").val(),
+					content : $("#board_content").val()
+				});
+				$.ajax({
+					url : "http://localhost:8081/api/boards",
+					type : "POST",
+					data : jsonData,
+					contentType : "application/json",
+					dataType : "json",
+					success : function() {
+						alert("저장 성공!");
+						location.href = "/board/list";
+					},
+					error : function() {
+						alert("저장 실패!");
+					}
+				});
+			});
+		</script>
+		<script th:if="${board?.idx}">
+			// 수정버튼
+			$("#update").click(function() {
+				var jsonData = JSON.stringify({
+					title : $("#board_title").val(),
+					content : $("#board_content").val(),
+					createdDate : $("#board_create_date").val()
+				});
+				$.ajax({
+					url : "http://localhost:8081/api/boards/" + $("#board_idx").val(),
+					type : "PUT",
+					data : jsonData,
+					contentType : "application/json",
+					dataType : "json",
+					success : function() {
+						alert("수정 성공!");
+						location.href = "/board/list";
+					},
+					error : function() {
+						alert("수정 실패!");
+					}
+				});
+			});
+			
+			// 삭제 버튼
+			$("#delete").click(function() {
+				$.ajax({
+					url : "http://localhost:8081/api/boards/" + $("#board_idx").val(),
+					type : "DELETE",
+					success : function() {
+						alert("삭제 성공!");
+						location.href = "/board/list";
+					},
+					error : function() {
+						alert("삭제 실패!");
+					}
+				});
+			});
+		</script>
+	</th:block>
+	
+</body>
+
+</html>
