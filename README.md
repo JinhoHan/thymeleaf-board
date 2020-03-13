@@ -1,5 +1,8 @@
 # thymeleaf-board
 
+>> 단순히 thymeleaf 를 사용하고 싶어서 사용함.
+>> static file 이 spring tomcat에서 작동하는 부분을 해결하기 위해서 react.js 를 이용하여 수정할 계획임.
+
 
 
 # thymeleaf-frontend
